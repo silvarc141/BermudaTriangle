@@ -9,10 +9,16 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public int score = 0;
     public int hiScore = 0;
+    public int comboCounter = 0;
 
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI hiScoreText;
+    public TextMeshProUGUI comboText;
+    private Color comboTextColor = new Color();
+    public Color comboColor1 = new Color();
+    public Color comboColor2 = new Color();
 
+    
     public MovingTarget movingTargetPrefab;
 
     private float midPointMaxOffset = 10;
@@ -21,16 +27,20 @@ public class GameManager : MonoBehaviour
     private float spawnCooldown = 5f;
     private int simultaneousSpawnCount = 1;
     private float lastSpawnTime = -Mathf.Infinity;
-
+    
+    
     private void Awake()
+    
     {
+        comboTextColor = comboText.color;
+
+        UpdateScoreDisplay();
+        
         if (instance == null)
         {
             instance = this;
         }
-        else Destroy(gameObject);
-
-        UpdateScoreDisplay();
+      
     }
 
     private void Start()
@@ -40,8 +50,17 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        UpdateScoreDisplay();
+        comboText.text = "+" + comboCounter.ToString();
 
+        if (comboCounter >= 10)
+        {
+            
+            comboText.color = Color.Lerp(comboColor1, comboColor2, Mathf.Round((Mathf.Sin(Time.time * 15f)+1)/2));
+        }
+
+       
+        
+        
         if (Time.time - lastSpawnTime > spawnCooldown / (1 + score / 10))
         {
             for (int i = 0; i < simultaneousSpawnCount; i++)
@@ -50,25 +69,22 @@ public class GameManager : MonoBehaviour
             }
             lastSpawnTime = Time.time;
         }
-
+        Debug.Log("Combo counter = " + comboCounter);
     }
 
     public void UpdateScoreDisplay()
     {
-        scoreText.text = score.ToString();
-        hiScoreText.text = hiScore.ToString();
+            scoreText.text = score.ToString();
+            hiScoreText.text = hiScore.ToString();    
     }
 
     public void AddPoints(int amountAdded)
     {
         if (amountAdded > 0)
         {
+            comboCounter += amountAdded;
             score += amountAdded;
 
-            if (score > hiScore)
-            {
-                hiScore = score;
-            }
         }
         else if (amountAdded < 0)
         {
@@ -76,9 +92,34 @@ public class GameManager : MonoBehaviour
 
         }
 
+        
+    }
+    public void EndCombo()
+    {
+        VFXManager.SpawnParticleOneshot(VFXManager.instance.endComboVFX, scoreText.transform.position);
+
+
+        if (score > hiScore)
+        {
+            VFXManager.SpawnParticleOneshot(VFXManager.instance.newHiScoreVFX, hiScoreText.transform.position);
+            hiScore = score;
+        }
+
+
+        comboText.color = comboTextColor;
+
+        if (comboCounter < 10)
+        {
+            GameManager.instance.score -= 3;
+        }
+        comboCounter = 0;
+
+        if (GameManager.instance.score < 0)
+        {
+            GameManager.instance.score = Mathf.Clamp(GameManager.instance.score + GameManager.instance.comboCounter, 0, int.MaxValue);
+        }
         UpdateScoreDisplay();
     }
-
     private void CreateNewTargetPath()
     {
         Vector2[] linePos = CalculateTargetLine();
@@ -87,7 +128,7 @@ public class GameManager : MonoBehaviour
 
         MovingTarget target = Instantiate(movingTargetPrefab, start, Quaternion.identity);
 
-        target.Init(start, end, targetStartDelay / (1 + score / 10), baseMovingTargetSpeed * (1 + score / 10));
+        target.Init(start, end, targetStartDelay / (1 + score / 10f), baseMovingTargetSpeed * (1 + score / 10f));
 
     }
 

@@ -23,6 +23,8 @@ public class VFXManager : MonoBehaviour
     public ParticleSystem missVFX;
     public ParticleSystem dropVFX;
     public ParticleSystem clickEmptyVFX;
+    public ParticleSystem endComboVFX;
+    public ParticleSystem newHiScoreVFX;
 
     public static void SpawnParticleOneshot(ParticleSystem particle, Vector2 position)
     {

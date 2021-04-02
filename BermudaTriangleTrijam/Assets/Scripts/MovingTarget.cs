@@ -17,6 +17,8 @@ public class MovingTarget : MonoBehaviour
     private Vector2 direction;
     private float movementSpeed;
     private float startDelay = Mathf.Infinity;
+    
+    
 
     public LineRenderer line;
 
@@ -62,8 +64,8 @@ public class MovingTarget : MonoBehaviour
 
     private IEnumerator DelayedDestroy(float delay)
     {
-        GameManager.instance.AddPoints(-scoreSubtractionOnEscape);
-
+        GameManager.instance.EndCombo();
+       
         destroying = true;
         GetComponent<Collider2D>().enabled = false;
 
